@@ -1,33 +1,42 @@
+using BFFConductor.Api.Services;
+using BFFConductor.Attributes;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BFFConductor.Api.Controllers
+namespace BFFConductor.Api.Controllers;
+
+// Controller-level overrides: these apply to all actions unless an action overrides them
+[ApiController]
+[UseBFFResponseFilter]
+[Route("[controller]")]
+[ErrorDisplay(ErrorCodes.ValidationFailed, DisplayMethod.Modal)]  // spec default is Inline (2); override to Modal here
+[ErrorDisplay(ErrorCodes.NotFound, DisplayMethod.Page)]           // spec default is Toast (1); override to Page here
+public class WeatherForecastController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    private readonly IWeatherService _weatherService;
+
+    public WeatherForecastController(IWeatherService weatherService)
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        _weatherService = weatherService;
+    }
 
-        private readonly ILogger<WeatherForecastController> _logger;
+    // GET /weatherforecast
+    // Success  → 200, x-handle-message-as: 1 (Toast, from spec default)
+    [HttpGet]
+    public IActionResult Get()
+    {
+        var result = _weatherService.GetForecasts();
+        return Ok(result);
+    }
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
-        {
-            _logger = logger;
-        }
-
-        [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
-        {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
-        }
+    // GET /weatherforecast/{id}
+    // Success    → 200, x-handle-message-as: 1 (Toast)
+    // id <= 0    → 422, x-handle-message-as: 2 (Inline)  ← action overrides controller's Modal
+    // id > 100   → 404, x-handle-message-as: 4 (Page)    ← inherits controller override
+    [HttpGet("{id:int}")]
+    [ErrorDisplay(ErrorCodes.ValidationFailed, DisplayMethod.Inline)] // action override: Inline instead of controller's Modal
+    public IActionResult GetById(int id)
+    {
+        var result = _weatherService.GetForecastById(id);
+        return Ok(result);
     }
 }

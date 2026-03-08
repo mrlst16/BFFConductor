@@ -1,0 +1,18 @@
+{
+  "defaults": {
+    "displayMethod": "toast"
+  },
+  "mappings": [
+    { "errorCode": "1001", "httpStatus": 422, "displayMethod": "inline" },
+    { "errorCode": "1002", "httpStatus": 404, "displayMethod": "toast" },
+    {
+      "errorCode": "1003",
+      "httpStatus": 401,
+      "displayMethod": "page",
+      "additionalHeaders": {
+        "WWW-Authenticate": "Bearer"
+      }
+    },
+    { "errorCode": "0", "httpStatus": 500, "displayMethod": "modal" }
+  ]
+}

@@ -63,3 +63,4 @@ appsettings.*.json
 .DS_Store
 Thumbs.db
 desktop.ini
+/.claude
