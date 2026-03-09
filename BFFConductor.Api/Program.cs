@@ -5,6 +5,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy => policy
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .WithExposedHeaders("x-handle-message-as"));
+});
+
 builder.Services.AddBffResponse(options =>
 {
     options.MappingSpecPath = "error-mapping.json";
@@ -12,7 +21,8 @@ builder.Services.AddBffResponse(options =>
 });
 
 var app = builder.Build();
-app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+app.UseCors();
 app.UseHttpsRedirection();
 app.MapControllers();
 

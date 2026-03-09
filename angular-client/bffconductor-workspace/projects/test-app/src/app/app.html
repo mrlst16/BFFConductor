@@ -1,3 +1,5 @@
+<ngx-sonner-toaster richColors />
+
 <div class="container">
   <h1>BFF Conductor Test</h1>
 
@@ -14,7 +16,7 @@
         <button class="btn btn-error"
           (click)="send(scenario.errorCode, scenario.errorMessage)">
           {{ scenario.label }}
-          <span class="code">{{ scenario.errorCode }}</span>
+          <span class="display-method">{{ scenario.displayMethod }}</span>
         </button>
       }
     </div>
@@ -22,10 +24,13 @@
 
   @if (result().kind === 'success') {
     <p class="result result--success">✓ Success</p>
-  } @else if (result().kind === 'error') {
-    @let r = result();
-    @if (r.kind === 'error') {
-      <p class="result result--error">✗ HTTP {{ r.status }} — see console</p>
-    }
+  }
+
+  @if (inlineErrors().length > 0) {
+    <div class="inline-errors">
+      @for (error of inlineErrors(); track error.message) {
+        <p class="inline-error">⚠ {{ error.message }}</p>
+      }
+    </div>
   }
 </div>
