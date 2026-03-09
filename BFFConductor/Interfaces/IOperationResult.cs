@@ -6,7 +6,7 @@ public interface IOperationResult
 {
     bool Success { get; }
     IReadOnlyList<OperationError> Errors { get; }
-    string? DisplayMethod { get; }
+    string? DisplayMode { get; }
     object? GetData();
 }
 

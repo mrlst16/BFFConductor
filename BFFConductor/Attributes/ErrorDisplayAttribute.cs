@@ -4,11 +4,11 @@ namespace BFFConductor.Attributes;
 public class ErrorDisplayAttribute : Attribute
 {
     public string ErrorCode { get; }
-    public string DisplayMethod { get; }
+    public string DisplayMode { get; }
 
-    public ErrorDisplayAttribute(string errorCode, string displayMethod)
+    public ErrorDisplayAttribute(string errorCode, string displayMode)
     {
         ErrorCode = errorCode;
-        DisplayMethod = displayMethod;
+        DisplayMode = displayMode;
     }
 }

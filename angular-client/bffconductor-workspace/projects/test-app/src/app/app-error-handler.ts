@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { BffErrorHandler, ApiError } from 'bffconductor';
 import { toast } from 'ngx-sonner';
 import { InlineErrorService } from './inline-error.service';
 
 @Injectable()
 export class AppErrorHandler implements BffErrorHandler {
-  constructor(private inlineErrors: InlineErrorService) {}
+  constructor(private inlineErrors: InlineErrorService, private router: Router) {}
 
-  handle(displayMethod: string, errors: ApiError[], _headers: Record<string, string>): void {
+  handle(displayMethod: string, errors: ApiError[], headers: Record<string, string>): void {
     const message = errors[0]?.message ?? 'An error occurred.';
 
     switch (displayMethod) {
@@ -20,6 +21,12 @@ export class AppErrorHandler implements BffErrorHandler {
       case 'inline':
         this.inlineErrors.set(errors);
         break;
+      case 'redirect': {
+        const url = headers['x-redirect-url'] ?? '/error';
+        const redirectMessage = headers['x-redirect-message'] ?? message;
+        this.router.navigateByUrl(`${url}?message=${encodeURIComponent(redirectMessage)}`);
+        break;
+      }
       case 'silent':
         break;
     }

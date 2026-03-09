@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
         var options = new BffResponseOptions();
         configure(options);
 
-        var registry = ErrorMappingRegistry.LoadFrom(options.MappingSpecPath, options.FallbackDisplayMethod);
+        var registry = ErrorMappingRegistry.LoadFrom(options.MappingSpecPath, options.FallbackDisplayMode);
 
         services.AddSingleton(options);
         services.AddSingleton(registry);

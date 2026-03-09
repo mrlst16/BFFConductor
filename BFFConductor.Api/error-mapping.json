@@ -1,11 +1,20 @@
 {
   "defaults": {
-    "displayMethod": "toast"
+    "displayMode": "toast"
   },
   "mappings": [
-    { "errorCode": "1001", "httpStatus": 422, "displayMethod": "inline" },
-    { "errorCode": "1002", "httpStatus": 404, "displayMethod": "toast" },
-    { "errorCode": "1003", "httpStatus": 401, "displayMethod": "snackbar" },
-    { "errorCode": "0",    "httpStatus": 500, "displayMethod": "silent" }
+    { "errorCode": "1001", "httpStatus": 422, "displayMode": "inline" },
+    { "errorCode": "1002", "httpStatus": 404, "displayMode": "toast" },
+    { "errorCode": "1003", "httpStatus": 401, "displayMode": "snackbar" },
+    {
+      "errorCode": "1004",
+      "httpStatus": 403,
+      "displayMode": "redirect",
+      "additionalHeaders": {
+        "x-redirect-url": "/error",
+        "x-redirect-message": "You do not have permission to access this resource."
+      }
+    },
+    { "errorCode": "0", "httpStatus": 500, "displayMode": "silent" }
   ]
 }

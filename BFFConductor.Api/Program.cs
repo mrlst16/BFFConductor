@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddBffResponse(options =>
 {
     options.MappingSpecPath = "error-mapping.json";
-    options.FallbackDisplayMethod = DisplayMethod.Toast;
+    options.FallbackDisplayMode = DisplayMethod.Toast;
 });
 
 var app = builder.Build();

@@ -7,21 +7,21 @@ public class ErrorMappingRegistry
 {
     private readonly Dictionary<string, ErrorMapping> _mappings;
 
-    public string DefaultDisplayMethod { get; }
+    public string DefaultDisplayMode { get; }
 
-    private ErrorMappingRegistry(Dictionary<string, ErrorMapping> mappings, string defaultDisplayMethod)
+    private ErrorMappingRegistry(Dictionary<string, ErrorMapping> mappings, string defaultDisplayMode)
     {
         _mappings = mappings;
-        DefaultDisplayMethod = defaultDisplayMethod;
+        DefaultDisplayMode = defaultDisplayMode;
     }
 
-    public static ErrorMappingRegistry LoadFrom(string path, string fallbackDisplayMethod)
+    public static ErrorMappingRegistry LoadFrom(string path, string fallbackDisplayMode)
     {
         var json = File.ReadAllText(path);
         var config = JsonSerializer.Deserialize<BffMappingConfig>(json)
             ?? throw new InvalidOperationException($"Failed to deserialize mapping spec at '{path}'.");
 
-        var defaultDisplayMethod = config.Defaults?.DisplayMethod ?? fallbackDisplayMethod;
+        var defaultDisplayMode = config.Defaults?.DisplayMode ?? fallbackDisplayMode;
 
         var dict = config.Mappings.ToDictionary(
             m => m.ErrorCode,
@@ -29,11 +29,11 @@ public class ErrorMappingRegistry
             {
                 ErrorCode = m.ErrorCode,
                 HttpStatus = m.HttpStatus,
-                DisplayMethod = m.DisplayMethod,
+                DisplayMode = m.DisplayMode,
                 AdditionalHeaders = m.AdditionalHeaders
             });
 
-        return new ErrorMappingRegistry(dict, defaultDisplayMethod);
+        return new ErrorMappingRegistry(dict, defaultDisplayMode);
     }
 
     /// <summary>Returns a cloned dictionary so callers can safely mutate it for per-request resolution.</summary>
@@ -51,8 +51,8 @@ file class BffMappingConfig
 
 file class BffMappingDefaults
 {
-    [JsonPropertyName("displayMethod")]
-    public string DisplayMethod { get; init; } = string.Empty;
+    [JsonPropertyName("displayMode")]
+    public string DisplayMode { get; init; } = string.Empty;
 }
 
 file class BffMappingEntry
@@ -63,8 +63,8 @@ file class BffMappingEntry
     [JsonPropertyName("httpStatus")]
     public int HttpStatus { get; init; }
 
-    [JsonPropertyName("displayMethod")]
-    public string DisplayMethod { get; init; } = string.Empty;
+    [JsonPropertyName("displayMode")]
+    public string DisplayMode { get; init; } = string.Empty;
 
     [JsonPropertyName("additionalHeaders")]
     public Dictionary<string, string>? AdditionalHeaders { get; init; }
