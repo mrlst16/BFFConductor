@@ -3,12 +3,12 @@ import { inject } from '@angular/core';
 import { throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiResponse } from './models';
-import { BFF_ERROR_HANDLER } from './bff-error-handler';
+import { BFF_ERROR_ROUTER } from './bff-error-router';
 
-export const BFF_DISPLAY_METHOD_HEADER = 'x-handle-message-as';
+export const BFF_DISPLAY_MODE_HEADER = 'x-handle-message-as';
 
 export const bffResponseInterceptor: HttpInterceptorFn = (req, next) => {
-  const errorHandler = inject(BFF_ERROR_HANDLER, { optional: true });
+  const errorRouter = inject(BFF_ERROR_ROUTER, { optional: true });
 
   return next(req).pipe(
     map(event => {
@@ -24,12 +24,12 @@ export const bffResponseInterceptor: HttpInterceptorFn = (req, next) => {
       return event.clone({ body: body.data });
     }),
     catchError(err => {
-      if (errorHandler && err instanceof HttpErrorResponse) {
+      if (errorRouter && err instanceof HttpErrorResponse) {
         const body = err.error as ApiResponse<unknown>;
         if (body && typeof body === 'object' && 'success' in body) {
-          const displayMethod = err.headers.get(BFF_DISPLAY_METHOD_HEADER) ?? 'toast';
+          const displayMode = err.headers.get(BFF_DISPLAY_MODE_HEADER) ?? 'toast';
           const headers = headersToRecord(err.headers);
-          errorHandler.handle(displayMethod, body.errors ?? [], headers);
+          errorRouter.route(displayMode, body.errors ?? [], headers);
         }
       }
       return throwError(() => err);

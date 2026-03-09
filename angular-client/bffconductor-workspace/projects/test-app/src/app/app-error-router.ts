@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BffErrorHandler, ApiError } from 'bffconductor';
+import { BffErrorRouter, ApiError } from 'bffconductor';
 import { toast } from 'ngx-sonner';
 import { InlineErrorService } from './inline-error.service';
 
 @Injectable()
-export class AppErrorHandler implements BffErrorHandler {
+export class AppErrorRouter implements BffErrorRouter {
   constructor(private inlineErrors: InlineErrorService, private router: Router) {}
 
-  handle(displayMethod: string, errors: ApiError[], headers: Record<string, string>): void {
+  route(displayMode: string, errors: ApiError[], headers: Record<string, string>): void {
     const message = errors[0]?.message ?? 'An error occurred.';
 
-    switch (displayMethod) {
+    switch (displayMode) {
       case 'toast':
         toast.error(message, { position: 'top-right' });
         break;
