@@ -13,7 +13,7 @@ builder.Services.AddCors(options =>
         .AllowAnyOrigin()
         .AllowAnyMethod()
         .AllowAnyHeader()
-        .WithExposedHeaders("x-handle-message-as"));
+        .WithExposedHeaders("*"));
 });
 
 builder.Services.AddBffResponse(options =>
