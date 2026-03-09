@@ -16,5 +16,10 @@
       }
     },
     { "errorCode": "0", "httpStatus": 500, "displayMode": "silent" }
+  ],
+  "exceptionMappings": [
+    { "exceptionType": "ArgumentNullException", "httpStatus": 422, "displayMode": "inline", "errorCode": "1001" },
+    { "exceptionType": "ArgumentException", "httpStatus": 400, "displayMode": "toast", "errorCode": "1001" },
+    { "exceptionType": "InvalidOperationException", "httpStatus": 500, "displayMode": "toast", "errorCode": "0" }
   ]
 }

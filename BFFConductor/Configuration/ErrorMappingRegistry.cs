@@ -1,6 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
 namespace BFFConductor.Configuration;
 
 public class ErrorMappingRegistry
@@ -15,12 +12,8 @@ public class ErrorMappingRegistry
         DefaultDisplayMode = defaultDisplayMode;
     }
 
-    public static ErrorMappingRegistry LoadFrom(string path, string fallbackDisplayMode)
+    internal static ErrorMappingRegistry LoadFrom(BffMappingConfig config, string fallbackDisplayMode)
     {
-        var json = File.ReadAllText(path);
-        var config = JsonSerializer.Deserialize<BffMappingConfig>(json)
-            ?? throw new InvalidOperationException($"Failed to deserialize mapping spec at '{path}'.");
-
         var defaultDisplayMode = config.Defaults?.DisplayMode ?? fallbackDisplayMode;
 
         var dict = config.Mappings.ToDictionary(
@@ -38,34 +31,4 @@ public class ErrorMappingRegistry
 
     /// <summary>Returns a cloned dictionary so callers can safely mutate it for per-request resolution.</summary>
     public Dictionary<string, ErrorMapping> CloneMappings() => new(_mappings);
-}
-
-file class BffMappingConfig
-{
-    [JsonPropertyName("defaults")]
-    public BffMappingDefaults? Defaults { get; init; }
-
-    [JsonPropertyName("mappings")]
-    public List<BffMappingEntry> Mappings { get; init; } = new();
-}
-
-file class BffMappingDefaults
-{
-    [JsonPropertyName("displayMode")]
-    public string DisplayMode { get; init; } = string.Empty;
-}
-
-file class BffMappingEntry
-{
-    [JsonPropertyName("errorCode")]
-    public string ErrorCode { get; init; } = string.Empty;
-
-    [JsonPropertyName("httpStatus")]
-    public int HttpStatus { get; init; }
-
-    [JsonPropertyName("displayMode")]
-    public string DisplayMode { get; init; } = string.Empty;
-
-    [JsonPropertyName("additionalHeaders")]
-    public Dictionary<string, string>? AdditionalHeaders { get; init; }
 }

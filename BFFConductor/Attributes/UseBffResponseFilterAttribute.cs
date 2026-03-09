@@ -5,5 +5,5 @@ namespace BFFConductor.Attributes;
 
 public class UseBFFResponseFilterAttribute : TypeFilterAttribute
 {
-    public UseBFFResponseFilterAttribute() : base(typeof(BffResponseFilter)) { }
+    public UseBFFResponseFilterAttribute() : base(typeof(BffCompositeFilter)) { }
 }

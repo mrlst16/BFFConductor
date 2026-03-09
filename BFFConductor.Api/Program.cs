@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
         .WithExposedHeaders("*"));
 });
 
-builder.Services.AddBffResponse(options =>
+builder.Services.AddBFFConductor(options =>
 {
     options.MappingSpecPath = "error-mapping.json";
     options.FallbackDisplayMode = DisplayMethod.Toast;
