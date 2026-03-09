@@ -1,1 +1,118 @@
-/* You can add global styles to this file, and also import other style files */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: sans-serif; background: #fafafa; }
+
+/* ── Nav ─────────────────────────────────────────── */
+nav {
+  background: #1a1a1a;
+  padding: 0 24px;
+  display: flex;
+  gap: 4px;
+
+  a {
+    display: inline-block;
+    padding: 14px 18px;
+    color: #aaa;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s;
+
+    &:hover { color: #fff; }
+    &.active { color: #fff; border-bottom-color: #22c55e; }
+  }
+}
+
+/* ── Page layout ─────────────────────────────────── */
+.container {
+  max-width: 640px;
+  margin: 48px auto;
+  padding: 0 24px;
+
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    color: #1a1a1a;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 28px;
+  }
+}
+
+/* ── Button grid ─────────────────────────────────── */
+.button-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.success-row {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+  min-width: 120px;
+
+  &:hover  { filter: brightness(0.9); }
+  &:active { filter: brightness(0.8); }
+
+  .display-mode {
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.btn-success { background: #22c55e; color: #fff; }
+.btn-error   { background: #ef4444; color: #fff; }
+
+/* ── Feedback ────────────────────────────────────── */
+.result {
+  margin-top: 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: 8px;
+
+  &--success { background: #dcfce7; color: #166534; }
+}
+
+.inline-errors {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-error {
+  padding: 10px 14px;
+  background: #fff7ed;
+  border-left: 3px solid #f97316;
+  border-radius: 4px;
+  color: #9a3412;
+  font-size: 0.9rem;
+}

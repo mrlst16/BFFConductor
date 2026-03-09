@@ -15,4 +15,12 @@ export class TestService {
   post(request: ErrorRequest): Observable<boolean> {
     return this.http.post<boolean>(`${environment.apiBase}/test/error`, request);
   }
+
+  postControllerLevel(request: ErrorRequest): Observable<boolean> {
+    return this.http.post<boolean>(`${environment.apiBase}/attributetest/controller`, request);
+  }
+
+  postActionLevel(request: ErrorRequest): Observable<boolean> {
+    return this.http.post<boolean>(`${environment.apiBase}/attributetest/action`, request);
+  }
 }

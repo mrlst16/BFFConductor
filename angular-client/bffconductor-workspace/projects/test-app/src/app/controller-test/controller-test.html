@@ -1,5 +1,10 @@
 <div class="container">
-  <h1>BFF Conductor Test</h1>
+  <h1>Controller-Level Attributes</h1>
+  <p class="subtitle">
+    Spec: 1001 → inline &nbsp;|&nbsp; 1002 → toast
+    &nbsp;&nbsp;→&nbsp;&nbsp;
+    Controller overrides: 1001 → toast &nbsp;|&nbsp; 1002 → silent
+  </p>
 
   <div class="button-grid">
     <div class="row success-row">
@@ -8,19 +13,18 @@
         {{ successScenario.label }}
       </button>
     </div>
-
-    <div class="row error-row">
+    <div class="row">
       @for (scenario of errorScenarios; track scenario.label) {
         <button class="btn btn-error"
           (click)="send(scenario.errorCode, scenario.errorMessage)">
           {{ scenario.label }}
-          <span class="display-mode">{{ scenario.displayMethod }}</span>
+          <span class="display-mode">{{ scenario.displayMode }}</span>
         </button>
       }
     </div>
   </div>
 
-  @if (result().kind === 'success') {
+  @if (result() === 'success') {
     <p class="result result--success">✓ Success</p>
   }
 
