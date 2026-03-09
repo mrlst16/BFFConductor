@@ -12,7 +12,7 @@ builder.Services.AddBffResponse(options =>
 });
 
 var app = builder.Build();
-
+app.UseCors(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 app.UseHttpsRedirection();
 app.MapControllers();
 
