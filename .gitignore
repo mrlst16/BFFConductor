@@ -64,3 +64,4 @@ appsettings.*.json
 Thumbs.db
 desktop.ini
 /.claude
+/publish-bff-conductor.ps1
