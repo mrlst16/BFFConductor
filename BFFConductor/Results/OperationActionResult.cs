@@ -4,48 +4,44 @@ using BFFConductor.Configuration;
 using BFFConductor.Interfaces;
 using BFFConductor.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace BFFConductor.Filters;
+namespace BFFConductor.Results;
 
-public class BffResponseFilter : IActionFilter
+public class OperationActionResult<T> : IActionResult
 {
     private const string HeaderName = "x-handle-message-as";
 
+    private readonly IOperationResult _operationResult;
     private readonly ErrorMappingRegistry _registry;
-    private readonly BffResponseOptions _options;
 
-    public BffResponseFilter(ErrorMappingRegistry registry, BffResponseOptions options)
+    public OperationActionResult(OperationResult<T> operationResult, ErrorMappingRegistry registry)
     {
+        _operationResult = operationResult;
         _registry = registry;
-        _options = options;
     }
 
-    public void OnActionExecuting(ActionExecutingContext context) { }
-
-    public void OnActionExecuted(ActionExecutedContext context)
+    public async Task ExecuteResultAsync(ActionContext context)
     {
-        if (context.Exception is not null) return;
-        if (context.Result is not ObjectResult { Value: IOperationResult operationResult }) return;
-
         var resolvedMap = BuildResolvedMap(context);
+        ObjectResult objectResult;
 
-        if (operationResult.Success)
+        if (_operationResult.Success)
         {
-            var displayMode = operationResult.DisplayMode ?? _registry.DefaultDisplayMode;
+            var displayMode = _operationResult.DisplayMode ?? _registry.DefaultDisplayMode;
 
             context.HttpContext.Response.Headers[HeaderName] = displayMode;
-            context.Result = new OkObjectResult(new ApiResponse<object?>
+            objectResult = new OkObjectResult(new ApiResponse<object?>
             {
                 Success = true,
-                Data = operationResult.GetData(),
+                Data = _operationResult.GetData(),
                 Errors = []
             });
         }
         else
         {
-            var firstErrorCode = operationResult.Errors.FirstOrDefault()?.Code;
+            var firstErrorCode = _operationResult.Errors.FirstOrDefault()?.Code;
 
             ErrorMapping? mapping = null;
             if (firstErrorCode is not null && resolvedMap.TryGetValue(firstErrorCode, out var mapped))
@@ -69,16 +65,19 @@ public class BffResponseFilter : IActionFilter
                     : currentExposed + ", " + toAppend;
             }
 
-            context.Result = new ObjectResult(new ApiResponse<object?>
+            objectResult = new ObjectResult(new ApiResponse<object?>
             {
                 Success = false,
                 Data = null,
-                Errors = operationResult.Errors
+                Errors = _operationResult.Errors
                     .Select(e => new ApiError { Message = e.Message, Code = e.Code })
                     .ToList()
             })
             { StatusCode = httpStatus };
         }
+
+        // Delegate to ObjectResult to handle actual response serialization
+        await objectResult.ExecuteResultAsync(context);
     }
 
     /// <summary>
@@ -86,26 +85,25 @@ public class BffResponseFilter : IActionFilter
     /// Resolution order: global spec → controller attributes → action attributes (most specific wins).
     /// Attributes only override DisplayMode; HttpStatus always comes from the spec.
     /// </summary>
-    private Dictionary<string, ErrorMapping> BuildResolvedMap(ActionExecutedContext context)
+    private Dictionary<string, ErrorMapping> BuildResolvedMap(ActionContext context)
     {
         var map = _registry.CloneMappings();
 
         // Controller-level [ErrorDisplay] attributes
-        var controllerAttrs = context.Controller.GetType()
-            .GetCustomAttributes<ErrorDisplayAttribute>(inherit: true);
-
-        foreach (var attr in controllerAttrs)
-        {
-            if (!map.TryGetValue(attr.ErrorCode, out var existing))
-                throw new InvalidOperationException(
-                    $"[ErrorDisplay] on '{context.Controller.GetType().Name}' references error code '{attr.ErrorCode}' which has no entry in the mapping spec. Add it to error-mapping.json.");
-
-            map[attr.ErrorCode] = existing with { DisplayMode = attr.DisplayMode };
-        }
-
-        // Action-level [ErrorDisplay] attributes — most specific wins
         if (context.ActionDescriptor is ControllerActionDescriptor cad)
         {
+            var controllerAttrs = cad.ControllerTypeInfo.GetCustomAttributes<ErrorDisplayAttribute>(inherit: true);
+
+            foreach (var attr in controllerAttrs)
+            {
+                if (!map.TryGetValue(attr.ErrorCode, out var existing))
+                    throw new InvalidOperationException(
+                        $"[ErrorDisplay] on '{cad.ControllerTypeInfo.Name}' references error code '{attr.ErrorCode}' which has no entry in the mapping spec. Add it to error-mapping.json.");
+
+                map[attr.ErrorCode] = existing with { DisplayMode = attr.DisplayMode };
+            }
+
+            // Action-level [ErrorDisplay] attributes — most specific wins
             var actionAttrs = cad.MethodInfo.GetCustomAttributes<ErrorDisplayAttribute>(inherit: false);
 
             foreach (var attr in actionAttrs)

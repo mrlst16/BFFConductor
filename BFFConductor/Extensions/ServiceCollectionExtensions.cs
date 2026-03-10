@@ -24,7 +24,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSingleton(errorRegistry);
         services.AddSingleton(exceptionRegistry);
-        services.AddTransient<BffResponseFilter>();
         services.AddTransient<BffExceptionFilter>();
 
         return services;

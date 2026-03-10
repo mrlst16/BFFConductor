@@ -1,5 +1,7 @@
 using BFFConductor.Attributes;
+using BFFConductor.Configuration;
 using BFFConductor.Models;
+using BFFConductor.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BFFConductor.Api.Controllers;
@@ -7,23 +9,32 @@ namespace BFFConductor.Api.Controllers;
 // Spec defaults:  1001 → inline,   1002 → toast
 // Controller overrides: 1001 → toast, 1002 → silent
 [ApiController]
-[UseBFFResponseFilter]
+[UseBffExceptionFilter]
 [Route("[controller]")]
 [ErrorDisplay(ErrorCodes.ValidationFailed, DisplayMethod.Toast)]
 [ErrorDisplay(ErrorCodes.NotFound, DisplayMethod.Silent)]
 public class AttributeTestController : ControllerBase
 {
+    private readonly ErrorMappingRegistry _registry;
+
+    public AttributeTestController(ErrorMappingRegistry registry)
+    {
+        _registry = registry;
+    }
+
     // POST /attributetest/controller
     // Effective: 1001 → toast (controller), 1002 → silent (controller)
     [HttpPost("controller")]
     public IActionResult ControllerLevel([FromBody] ErrorRequest request)
     {
         if (request.ErrorCode is null && request.ErrorMessage is null)
-            return Ok(OperationResult<bool>.Ok(true));
+            return new OperationActionResult<bool>(OperationResult<bool>.Ok(true), _registry);
 
-        return Ok(OperationResult<bool>.Fail(
-            request.ErrorMessage ?? "An error occurred.",
-            request.ErrorCode));
+        return new OperationActionResult<bool>(
+            OperationResult<bool>.Fail(
+                request.ErrorMessage ?? "An error occurred.",
+                request.ErrorCode),
+            _registry);
     }
 
     // POST /attributetest/action
@@ -33,10 +44,12 @@ public class AttributeTestController : ControllerBase
     public IActionResult ActionLevel([FromBody] ErrorRequest request)
     {
         if (request.ErrorCode is null && request.ErrorMessage is null)
-            return Ok(OperationResult<bool>.Ok(true));
+            return new OperationActionResult<bool>(OperationResult<bool>.Ok(true), _registry);
 
-        return Ok(OperationResult<bool>.Fail(
-            request.ErrorMessage ?? "An error occurred.",
-            request.ErrorCode));
+        return new OperationActionResult<bool>(
+            OperationResult<bool>.Fail(
+                request.ErrorMessage ?? "An error occurred.",
+                request.ErrorCode),
+            _registry);
     }
 }
