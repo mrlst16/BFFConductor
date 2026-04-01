@@ -1,63 +1,156 @@
-# Bffconductor
+# bffconductor
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.0.
+Angular client library for the [BFFConductor](https://www.nuget.org/packages/BFFConductor) .NET pattern. Reads the `x-handle-message-as` response header and routes errors to the correct UI handler — toast, inline validation, modal, redirect, etc. — based on what the server specifies.
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Companion Package
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The server-side NuGet package is available at [nuget.org/packages/BFFConductor](https://www.nuget.org/packages/BFFConductor). It sets the `x-handle-message-as` header and standardizes the `ApiResponse` envelope that this library consumes.
 
 ```bash
-ng generate --help
+dotnet add package BFFConductor
 ```
 
-## Building
+---
 
-To build the library, run:
+## Installation
 
 ```bash
-ng build bffconductor
+npm install bffconductor
 ```
 
-This command will compile your project, and the build artifacts will be placed in the `dist/` directory.
+---
 
-### Publishing the Library
+## Quick Start
 
-Once the project is built, you can publish your library by following these steps:
+### 1. Register the interceptor in `app.config.ts`
 
-1. Navigate to the `dist` directory:
-   ```bash
-   cd dist/bffconductor
-   ```
+```typescript
+import { bffResponseInterceptor, BFF_ERROR_ROUTER } from 'bffconductor';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
-2. Run the `npm publish` command to publish your library to the npm registry:
-   ```bash
-   npm publish
-   ```
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(withInterceptors([bffResponseInterceptor])),
+    { provide: BFF_ERROR_ROUTER, useClass: AppErrorRouter }
+  ]
+};
 ```
 
-## Running end-to-end tests
+### 2. Implement `BffErrorRouter`
 
-For end-to-end (e2e) testing, run:
+```typescript
+import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
+import { BffErrorRouter, ApiError } from 'bffconductor';
 
-```bash
-ng e2e
+@Injectable({ providedIn: 'root' })
+export class AppErrorRouter implements BffErrorRouter {
+  constructor(private router: Router) {}
+
+  route(displayMode: string, errors: ApiError[], headers: Record<string, string>): void {
+    const message = errors[0]?.message ?? 'An error occurred.';
+
+    switch (displayMode) {
+      case 'toast':
+        // e.g. this.toastService.show(message);
+        break;
+      case 'inline':
+        // e.g. this.formErrorService.set(errors);
+        break;
+      case 'modal':
+        // e.g. this.dialogService.open(message);
+        break;
+      case 'redirect':
+        this.router.navigateByUrl(headers['x-redirect-url'] ?? '/error');
+        break;
+      case 'silent':
+        break;
+    }
+  }
+}
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## How It Works
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The `bffResponseInterceptor` hooks into Angular's `HttpClient` pipeline and does two things:
+
+**On success** — unwraps the `ApiResponse<T>` envelope so your services receive `data` directly, not the wrapper object.
+
+**On error** — reads the `x-handle-message-as` response header, then calls `BffErrorRouter.route()` with the display mode, errors array, and all response headers. Your router implementation decides how to present it.
+
+```
+HTTP error response
+  └─ x-handle-message-as: inline
+  └─ body: { success: false, errors: [{ message: "Name is required", code: "VALIDATION_FAILED" }] }
+        ↓
+  bffResponseInterceptor
+        ↓
+  BffErrorRouter.route("inline", errors, headers)
+        ↓
+  Your UI logic (show inline validation, toast, redirect, etc.)
+```
+
+If no `BFF_ERROR_ROUTER` is provided, the interceptor still processes responses but skips routing — errors are re-thrown for your own `catchError` handling.
+
+---
+
+## API Reference
+
+### `bffResponseInterceptor`
+
+`HttpInterceptorFn` — register via `withInterceptors([bffResponseInterceptor])`.
+
+### `BFF_ERROR_ROUTER`
+
+`InjectionToken<BffErrorRouter>` — provide your implementation to handle routed errors.
+
+### `BffErrorRouter`
+
+```typescript
+interface BffErrorRouter {
+  route(displayMode: string, errors: ApiError[], headers: Record<string, string>): void;
+}
+```
+
+### `ApiResponse<T>`
+
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  errors: ApiError[];
+}
+```
+
+### `ApiError`
+
+```typescript
+interface ApiError {
+  message: string;
+  code?: string;
+}
+```
+
+### `BFF_DISPLAY_MODE_HEADER`
+
+String constant: `'x-handle-message-as'`
+
+---
+
+## Display Modes
+
+Display modes are open strings — you define what they mean in your `BffErrorRouter`. Common conventions from the server-side library:
+
+| Mode | Typical UI behaviour |
+|---|---|
+| `silent` | Suppress UI; handle programmatically |
+| `toast` | Brief auto-dismissing notification |
+| `snackbar` | Bottom-of-screen notification bar |
+| `inline` | Validation errors next to form fields |
+| `modal` | Blocking dialog |
+| `page` | Full-page error |
+| `redirect` | Navigate away (check `x-redirect-url` header) |

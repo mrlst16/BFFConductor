@@ -89,16 +89,11 @@ builder.Services.AddBFFConductor(options =>
 [Route("[controller]")]
 public class OrdersController : ControllerBase
 {
-    private readonly ErrorMappingRegistry _registry;
-
-    public OrdersController(ErrorMappingRegistry registry)
-        => _registry = registry;
-
     [HttpPost]
     public IActionResult CreateOrder([FromBody] CreateOrderRequest request)
     {
         var result = _orderService.Create(request);
-        return new OperationActionResult<Order>(result, _registry);
+        return new OperationActionResult<Order>(result);
     }
 }
 ```
@@ -119,7 +114,7 @@ This path is for **anticipated, business-level errors** — validation failures,
 public IActionResult Create([FromBody] CreateOrderRequest request)
 {
     var result = _orderService.Create(request);          // returns OperationResult<T>
-    return new OperationActionResult<Order>(result, _registry);  // converts to HTTP
+    return new OperationActionResult<Order>(result);  // converts to HTTP
 }
 ```
 
@@ -192,7 +187,7 @@ return OperationResult<Order>.Ok(order, displayMode: "toast");
 public IActionResult UpdateOrder(int id, [FromBody] UpdateOrderRequest request)
 {
     var result = _orderService.Update(id, request);
-    return new OperationActionResult<Order>(result, _registry);
+    return new OperationActionResult<Order>(result);
 }
 ```
 
@@ -327,7 +322,7 @@ public IActionResult Delete(int id) { ... }
 | `ExceptionMappingRegistry` | Singleton | Exception type → HTTP status + display mode |
 | `BffExceptionFilter` | Transient | Exception filter (used by `[UseBffExceptionFilter]`) |
 
-You can inject `ErrorMappingRegistry` into any controller or service that constructs `OperationActionResult<T>`.
+`ErrorMappingRegistry` is resolved automatically by `OperationActionResult<T>` — no need to inject it into your controllers.
 
 ---
 
@@ -369,19 +364,17 @@ app.MapControllers();
 public class ProductsController : ControllerBase
 {
     private readonly IProductService _service;
-    private readonly ErrorMappingRegistry _registry;
 
-    public ProductsController(IProductService service, ErrorMappingRegistry registry)
+    public ProductsController(IProductService service)
     {
         _service = service;
-        _registry = registry;
     }
 
     [HttpGet("{id}")]
     public IActionResult Get(int id)
     {
         var result = _service.GetById(id);
-        return new OperationActionResult<Product>(result, _registry);
+        return new OperationActionResult<Product>(result);
     }
 
     [HttpPost]
@@ -389,7 +382,7 @@ public class ProductsController : ControllerBase
     public IActionResult Create([FromBody] CreateProductRequest request)
     {
         var result = _service.Create(request);
-        return new OperationActionResult<Product>(result, _registry);
+        return new OperationActionResult<Product>(result);
     }
 }
 ```

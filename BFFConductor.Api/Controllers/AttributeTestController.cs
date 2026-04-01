@@ -1,5 +1,4 @@
 using BFFConductor.Attributes;
-using BFFConductor.Configuration;
 using BFFConductor.Models;
 using BFFConductor.Results;
 using Microsoft.AspNetCore.Mvc;
@@ -15,26 +14,18 @@ namespace BFFConductor.Api.Controllers;
 [ErrorDisplay(ErrorCodes.NotFound, DisplayMethod.Silent)]
 public class AttributeTestController : ControllerBase
 {
-    private readonly ErrorMappingRegistry _registry;
-
-    public AttributeTestController(ErrorMappingRegistry registry)
-    {
-        _registry = registry;
-    }
-
     // POST /attributetest/controller
     // Effective: 1001 → toast (controller), 1002 → silent (controller)
     [HttpPost("controller")]
     public IActionResult ControllerLevel([FromBody] ErrorRequest request)
     {
         if (request.ErrorCode is null && request.ErrorMessage is null)
-            return new OperationActionResult<bool>(OperationResult<bool>.Ok(true), _registry);
+            return new OperationActionResult<bool>(OperationResult<bool>.Ok(true));
 
         return new OperationActionResult<bool>(
             OperationResult<bool>.Fail(
                 request.ErrorMessage ?? "An error occurred.",
-                request.ErrorCode),
-            _registry);
+                request.ErrorCode));
     }
 
     // POST /attributetest/action
@@ -44,12 +35,11 @@ public class AttributeTestController : ControllerBase
     public IActionResult ActionLevel([FromBody] ErrorRequest request)
     {
         if (request.ErrorCode is null && request.ErrorMessage is null)
-            return new OperationActionResult<bool>(OperationResult<bool>.Ok(true), _registry);
+            return new OperationActionResult<bool>(OperationResult<bool>.Ok(true));
 
         return new OperationActionResult<bool>(
             OperationResult<bool>.Fail(
                 request.ErrorMessage ?? "An error occurred.",
-                request.ErrorCode),
-            _registry);
+                request.ErrorCode));
     }
 }

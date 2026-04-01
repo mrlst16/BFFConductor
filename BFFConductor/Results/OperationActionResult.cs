@@ -6,6 +6,7 @@ using BFFConductor.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BFFConductor.Results;
 
@@ -14,17 +15,16 @@ public class OperationActionResult<T> : IActionResult
     private const string HeaderName = "x-handle-message-as";
 
     private readonly IOperationResult _operationResult;
-    private readonly ErrorMappingRegistry _registry;
 
-    public OperationActionResult(OperationResult<T> operationResult, ErrorMappingRegistry registry)
+    public OperationActionResult(OperationResult<T> operationResult)
     {
         _operationResult = operationResult;
-        _registry = registry;
     }
 
     public async Task ExecuteResultAsync(ActionContext context)
     {
-        var resolvedMap = BuildResolvedMap(context);
+        var _registry = context.HttpContext.RequestServices.GetRequiredService<ErrorMappingRegistry>();
+        var resolvedMap = BuildResolvedMap(context, _registry);
         ObjectResult objectResult;
 
         if (_operationResult.Success)
@@ -85,9 +85,9 @@ public class OperationActionResult<T> : IActionResult
     /// Resolution order: global spec → controller attributes → action attributes (most specific wins).
     /// Attributes only override DisplayMode; HttpStatus always comes from the spec.
     /// </summary>
-    private Dictionary<string, ErrorMapping> BuildResolvedMap(ActionContext context)
+    private Dictionary<string, ErrorMapping> BuildResolvedMap(ActionContext context, ErrorMappingRegistry registry)
     {
-        var map = _registry.CloneMappings();
+        var map = registry.CloneMappings();
 
         // Controller-level [ErrorDisplay] attributes
         if (context.ActionDescriptor is ControllerActionDescriptor cad)
