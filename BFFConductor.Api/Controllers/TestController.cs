@@ -1,5 +1,5 @@
 using BFFConductor.Attributes;
-using BFFConductor.Models;
+using Common.OperationResult;
 using BFFConductor.Results;
 using Microsoft.AspNetCore.Mvc;
 
