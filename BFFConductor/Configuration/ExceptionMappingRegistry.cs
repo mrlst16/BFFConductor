@@ -48,11 +48,11 @@ public class ExceptionMappingRegistry
     public static ExceptionMapping? FindMapping(IList<ExceptionMapping> orderedMappings, Type exceptionType) =>
         orderedMappings.FirstOrDefault(m => m.ResolvedType!.IsAssignableFrom(exceptionType));
 
-    private static Type? ResolveType(string simpleTypeName) =>
+    private static Type? ResolveType(string typeName) =>
         AppDomain.CurrentDomain
             .GetAssemblies()
             .SelectMany(a => { try { return a.GetTypes(); } catch { return []; } })
-            .FirstOrDefault(t => t.Name == simpleTypeName && typeof(Exception).IsAssignableFrom(t));
+            .FirstOrDefault(t => (t.FullName == typeName || t.Name == typeName) && typeof(Exception).IsAssignableFrom(t));
 
     private static int CompareBySpecificity(ExceptionMapping a, ExceptionMapping b)
     {
