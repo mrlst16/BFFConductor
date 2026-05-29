@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BFFConductor.Filters;
 
-internal class BffCompositeFilter : IExceptionFilter
+internal class BffCompositeFilter : IAsyncExceptionFilter
 {
     private readonly BffExceptionFilter _exceptionFilter;
 
@@ -11,6 +11,6 @@ internal class BffCompositeFilter : IExceptionFilter
         _exceptionFilter = exceptionFilter;
     }
 
-    public void OnException(ExceptionContext context) =>
-        _exceptionFilter.OnException(context);
+    public Task OnExceptionAsync(ExceptionContext context) =>
+        _exceptionFilter.OnExceptionAsync(context);
 }
