@@ -1,6 +1,7 @@
 using System.Reflection;
 using BFFConductor.Attributes;
 using BFFConductor.Configuration;
+using BFFConductor.Interfaces;
 using BFFConductor.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -8,20 +9,26 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BFFConductor.Filters;
 
-public class BffExceptionFilter : IExceptionFilter
+public class BffExceptionFilter : IAsyncExceptionFilter
 {
     private const string HeaderName = "x-handle-message-as";
 
     private readonly ExceptionMappingRegistry _registry;
     private readonly BffResponseOptions _options;
+    private readonly IBffExceptionHandler? _exceptionHandler;
 
-    public BffExceptionFilter(ExceptionMappingRegistry registry, BffResponseOptions options)
+    public BffExceptionFilter(
+        ExceptionMappingRegistry registry,
+        BffResponseOptions options,
+        IBffExceptionHandler? exceptionHandler = null
+    )
     {
         _registry = registry;
         _options = options;
+        _exceptionHandler = exceptionHandler;
     }
 
-    public void OnException(ExceptionContext context)
+    public async Task OnExceptionAsync(ExceptionContext context)
     {
         var orderedMappings = _registry.CloneMappings();
 
@@ -70,6 +77,9 @@ public class BffExceptionFilter : IExceptionFilter
         { StatusCode = mapping.HttpStatus };
 
         context.ExceptionHandled = true;
+
+        if (_exceptionHandler is not null)
+            await _exceptionHandler.HandleAsync(context.Exception);
     }
 
     private static void ApplyOverride(ExceptionDisplayAttribute attr, List<ExceptionMapping> orderedMappings, string ownerName)
